@@ -33,6 +33,8 @@ class MyCanvas(QtOpenGL.QGLWidget):
         self.m_hmodel = HeModel()
         self.m_controller = HeController(self.m_hmodel)
 
+        self.fence = False
+
     def initializeGL(self):
         #glClearColor(1.0, 1.0, 1.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -75,15 +77,10 @@ class MyCanvas(QtOpenGL.QGLWidget):
         # Display model polygon RGB color at its vertices
         # interpolating smoothly the color in the interior
         #glShadeModel(GL_SMOOTH)
-        pt0_U = self.convertPtCoordsToUniverse(self.m_pt0)
-        pt1_U = self.convertPtCoordsToUniverse(self.m_pt1)
-        glColor3f(1.0, 0.0, 0.0)
-        glBegin(GL_LINE_STRIP)
-        glVertex2f(pt0_U.x(), pt0_U.y())
-        glVertex2f(pt1_U.x(), pt1_U.y())
-        glEnd()
 
         if not((self.m_model == None) and (self.m_model.isEmpty())):
+            pass
+            '''
             verts = self.m_model.getVerts()
             glColor3f(0.0, 1.0, 0.0) # green
             glBegin(GL_TRIANGLES)
@@ -97,6 +94,7 @@ class MyCanvas(QtOpenGL.QGLWidget):
                 glVertex2f(curv.getP1().getX(), curv.getP1().getY())
                 glVertex2f(curv.getP2().getX(), curv.getP2().getY())
             glEnd()
+            '''
 
         if not(self.m_hmodel.isEmpty()):
             #print("teste")
@@ -117,40 +115,18 @@ class MyCanvas(QtOpenGL.QGLWidget):
                 ptc = curv.getPointsToDraw()
                 glColor3f(0.0, 1.0, 1.0) # 
                 glBegin(GL_LINES)
-                for curv in curves:
-                    glVertex2f(ptc[0].getX(), ptc[0].getY())
-                    glVertex2f(ptc[1].getX(), ptc[1].getY())
+                #for curv in curves:
+                glVertex2f(ptc[0].getX(), ptc[0].getY())
+                glVertex2f(ptc[1].getX(), ptc[1].getY())
                 glEnd()
         
         if self.m_model.grid is not None:
-            glColor3f(0.0,1.0,0.0)
-            glPointSize(2.0)
-
-            '''
-            glBegin(GL_POINTS)
-            for point in self.grid_points:
-                glVertex2f(point["x"], point["y"])
-            glEnd()
-
-            #glBegin(GL_POINTS)
-            for point in self.grid_points:
-                
-                glBegin(GL_LINE_LOOP)
-                for angulo in range(0, 360, 2):
-                    radiano = (angulo * pi) / 180
-
-                    glVertex2f(point["x"] + self.x_div/2 * cos(radiano), point["y"] + self.x_div/2 * sin(radiano))
-                glEnd()
-            
-            self.grid_points.clear()
-            '''
-
-            for i in range(self.m_model.nx):
-                for j in range(self.m_model.ny):
+            for j in range(self.m_model.ny): # linha do grid
+                for i in range(self.m_model.nx): # coluna do grid
+                    glColor3f(0.0,1.0,0.0)
+                    glPointSize(2.0)
 
                     point_id = self.m_model.calculate_point_id(i, j)
-
-                    if self.m_model.grid[point_id - 1] == 0: continue # o ponto nao esta dentro do modelo
 
                     p = self.m_model.calculate_point_value(i, j)
 
@@ -159,12 +135,42 @@ class MyCanvas(QtOpenGL.QGLWidget):
                     glVertex2f(p[0], p[1])
                     glEnd()
 
+                    if self.m_model.grid[point_id - 1] == 0: continue # o ponto nao esta dentro do modelo
+
+                    # desenha o ponto que esta dentro da cerca
+                    if str(point_id) in self.m_model.selected_points:# and self.m_model.selected_points[point_id] is None:
+                        glColor3f(1.0,0.0,0.0)
+                        glPointSize(3.0)
+                        glBegin(GL_POINTS)
+                        glVertex2f(p[0], p[1])
+                        glEnd()
+
                     # desenha a particula(circulo)
                     glBegin(GL_LINE_LOOP)
                     for angulo in range(0, 360, 2):
                         radiano = (angulo * pi) / 180
                         glVertex2f(p[0] + self.m_model.h * cos(radiano), p[1] + self.m_model.k * sin(radiano))
                     glEnd()
+
+            #self.m_model.clear_grid_info()
+
+        pt0_U = self.convertPtCoordsToUniverse(self.m_pt0)
+        pt1_U = self.convertPtCoordsToUniverse(self.m_pt1)
+        
+        if(self.fence):
+            glColor3f(0.0,0.0,1.0)
+            glBegin(GL_LINE_LOOP)
+            glVertex2f(pt0_U.x(), pt0_U.y())
+            glVertex2f(pt1_U.x(), pt0_U.y())
+            glVertex2f(pt1_U.x(), pt1_U.y())
+            glVertex2f(pt0_U.x(), pt1_U.y())
+            glEnd()
+        else:        
+            glColor3f(1.0, 0.0, 0.0)
+            glBegin(GL_LINE_STRIP)
+            glVertex2f(pt0_U.x(), pt0_U.y())
+            glVertex2f(pt1_U.x(), pt1_U.y())
+            glEnd()
 
         glEndList()
 
@@ -178,42 +184,67 @@ class MyCanvas(QtOpenGL.QGLWidget):
         return QtCore.QPointF(x,y)
 
     def mousePressEvent(self, event):
-        self.m_buttonPressed = True
+        if(event.button() == 1):
+            self.m_buttonPressed = True
+
+        elif(event.button() == 2):
+            self.fence = True
+            #self.m_model.selected_points = {} #reset vetor pontos
+
         self.m_pt0 = event.pos()
         self.m_pt1 = self.m_pt0
 
     def mouseMoveEvent(self, event):
-        if self.m_buttonPressed:
+        if self.m_buttonPressed or self.fence:
             self.m_pt1 = event.pos()
             self.update()
 
     def mouseReleaseEvent(self, event):
         pt0_U = self.convertPtCoordsToUniverse(self.m_pt0)
         pt1_U = self.convertPtCoordsToUniverse(self.m_pt1)
-        self.m_model.setCurve(pt0_U.x(),pt0_U.y(),pt1_U.x(),pt1_U.y())
 
-        p0 = Point(pt0_U.x(),pt0_U.y())
-        p1 = Point(pt1_U.x(),pt1_U.y())
-        segment = Line(p0,p1)
-        self.m_controller.insertSegment(segment,0.01)
+        if pt0_U == pt1_U: return
+        
+        if event.button() == 1:
+            #self.m_model.setCurve(pt0_U.x(),pt0_U.y(),pt1_U.x(),pt1_U.y())
 
-        self.update()
-        self.repaint()
+            p0 = Point(pt0_U.x(),pt0_U.y())
+            p1 = Point(pt1_U.x(),pt1_U.y())
+            segment = Line(p0,p1)
+            self.m_controller.insertSegment(segment,0.01)
 
-        #self.m_model.setCurve(self.m_pt0.x(),self.m_pt0.y(),self.m_pt1.x(),self.m_pt1.y())
-        self.m_buttonPressed = False
-        self.m_pt0.setX(0.0)
-        self.m_pt0.setY(0.0)
-        self.m_pt1.setX(0.0)
-        self.m_pt1.setY(0.0)
+            self.update()
+            self.repaint()
+
+            #self.m_model.setCurve(self.m_pt0.x(),self.m_pt0.y(),self.m_pt1.x(),self.m_pt1.y())
+            self.m_buttonPressed = False
+            self.m_pt0.setX(0.0)
+            self.m_pt0.setY(0.0)
+            self.m_pt1.setX(0.0)
+            self.m_pt1.setY(0.0)
+
+            self.update()
+            self.repaint()
+
+        elif event.button() == 2:
+            self.m_model.check_selected_points(pt0_U, pt1_U)
+
+            self.m_pt0.setX(0.0)
+            self.m_pt0.setY(0.0)
+            self.m_pt1.setX(0.0)
+            self.m_pt1.setY(0.0)
+            
+            self.update()
+            self.repaint()
+            self.fence = False
 
     def setModel(self,_model):
         self.m_model = _model
 
     def fitWorldToViewport(self):
-        if self.m_model == None:
+        if self.m_hmodel == None:
             return
-        self.m_L, self.m_R, self.m_B, self.m_T = self.m_model.getBoundBox()
+        self.m_L, self.m_R, self.m_B, self.m_T = self.m_hmodel.getBoundBox()
         self.scaleWorldWindow(1.10)
         self.update()
 

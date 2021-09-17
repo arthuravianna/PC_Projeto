@@ -12,8 +12,6 @@ from math import *
 
 from mymodel import MyModel
 
-import json
-
 class MyCanvas(QtOpenGL.QGLWidget):
 
     def __init__(self):
@@ -130,15 +128,15 @@ class MyCanvas(QtOpenGL.QGLWidget):
 
                     p = self.m_model.calculate_point_value(i, j)
 
+                    if self.m_model.grid[point_id - 1] == 0: continue # o ponto nao esta dentro do modelo
+
                     # desenha o ponto
                     glBegin(GL_POINTS)
                     glVertex2f(p[0], p[1])
                     glEnd()
 
-                    if self.m_model.grid[point_id - 1] == 0: continue # o ponto nao esta dentro do modelo
-
                     # desenha o ponto que esta dentro da cerca
-                    if str(point_id) in self.m_model.selected_points:# and self.m_model.selected_points[point_id] is None:
+                    if str(point_id) in self.m_model.selected_points:
                         glColor3f(1.0,0.0,0.0)
                         glPointSize(3.0)
                         glBegin(GL_POINTS)

@@ -1,3 +1,5 @@
+import json
+
 class MyPoint:
 
     def __init__(self,_x=0,_y=0):
@@ -45,7 +47,7 @@ class MyModel:
         self.k = None
 
         self.grid = None
-        self.selected_points = {}
+        self.selected_points = None
 
     def set_grid_info(self, x_min, x_max, y_min, y_max, nx, ny, patches=None):
         self.x_min = x_min
@@ -63,11 +65,11 @@ class MyModel:
         self.k = y_dist / float(self.ny-1) # espacamento vertical entre os pontos
 
         self.grid = [0 for x in range(self.nx*self.ny)]
-        #self.selected_points = {}
+        self.selected_points = {}
 
         if patches is not None: self.mark_points_inside_patches(patches)
     
-    def clear_grid_info(self):
+    def clear_model(self):
         self.x_min = None
         self.x_max = None
         self.y_min = None
@@ -80,6 +82,7 @@ class MyModel:
         self.k = None
 
         self.grid = None
+        self.selected_points = None
     
     def has_point_inside_model(self):
         result = False
@@ -125,7 +128,7 @@ class MyModel:
         left_id = self.calculate_point_id(i-1, j)
         right_id = self.calculate_point_id(i+1, j)
 
-        return [self.grid[top_id-1], self.grid[bottom_id-1], self.grid[left_id-1], self.grid[right_id-1]]
+        return [self.grid[right_id-1], self.grid[left_id-1], self.grid[bottom_id-1], self.grid[top_id-1]]
     
     def check_selected_points(self, pt0_U, pt1_U):
         x_min = min(pt0_U.x(), pt1_U.x())
@@ -146,6 +149,50 @@ class MyModel:
         
         print("SELECTED POINTS: ", self.selected_points)
 
+
+    def set_pvc(self, value):
+        if self.selected_points is None:
+            print("ERRO MyModel: Antes de setar o PVC eh preciso gerar um grid e selecionar os pontos")
+            return
+        
+        if len(self.selected_points) == 0:
+            print("ERRO MyModel: Antes de setar o PVC eh preciso selecionar os pontos do grid")
+            return
+
+        for k,v in self.selected_points.items():
+            if v is None: self.selected_points[k] = value
+
+    def save_model(self):
+        data = {}
+        data["h"] = self.h
+        data["k"] = self.k
+
+        data["nx"] = self.nx
+        data["ny"] = self.ny
+
+        data["cc"] = []
+        data["conect"] = []
+
+        for i in range(self.nx):
+            for j in range(self.ny):
+                point_id = self.calculate_point_id(i, j)
+
+                if self.grid[point_id - 1] == 0: continue # ponto fora do modelo
+
+                value = 0
+                if str(point_id) in self.selected_points: value = self.selected_points[str(point_id)]
+
+                if value is None:
+                    print("ERRO MyModel: Defina o valor da Condicao de Contorno!!!")
+                    return
+                
+                if value == 0: data["cc"].append((0, 0))
+                else: data["cc"].append((1, value))
+
+                data["conect"].append(self.check_point_connectivity(i, j))
+                   
+        with open(f"mdf_input_grid_{self.nx}x{self.ny}.json", "w") as f:
+            json.dump(data, f, indent=2)
 
 
 

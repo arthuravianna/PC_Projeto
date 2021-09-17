@@ -5,7 +5,9 @@ from mymodel import *
 
 # Globals
 GRID = 0
+PVC = 1
 GRID_ICON = "icons/grid.png"
+PVC_ICON = "icons/pvc.png"
 
 class MyWindow(QMainWindow):
 
@@ -27,9 +29,18 @@ class MyWindow(QMainWindow):
         panR = QAction(QIcon("icons/panright.jpg"),"panR",self)
         tb.addAction(panR)
 
-        grid = QAction(QIcon(GRID_ICON),"grid",self)
+        grid = QAction(QIcon(GRID_ICON),"generate grid",self)
         tb.addAction(grid)
-        
+
+        pvc = QAction(QIcon(PVC_ICON),"set boundary value",self)
+        tb.addAction(pvc)
+
+        save = QAction(QIcon("icons/save.png"),"save model",self)
+        tb.addAction(save)
+
+        clear = QAction(QIcon("icons/clear.png"),"clear model",self)
+        tb.addAction(clear)
+
         tb.actionTriggered[QAction].connect(self.tbpressed)
 #        tb2 = self.addToolBar("Draw")
 #        line = QAction(QIcon("icons/fit.jpg"),"line",self)
@@ -42,21 +53,32 @@ class MyWindow(QMainWindow):
         elif a.text() == "panR":
             self.canvas.panWorldWindow(-0.2, 0.0)
 
-        elif a.text() == "grid":
+        elif a.text() == "generate grid":
             self.buildPopup("Grid Options", GRID)
-    
+
+        elif a.text() == "set boundary value":
+            self.buildPopup("PVC Value", PVC)
+
+        elif a.text() == "save model":
+            self.model.save_model()
+
+        elif a.text() == "clear model":
+            self.model.clear_model()
+
+
     def buildPopup(self, name, popUpType, geometry = [200, 200, 300, 100]):
-        self.popUp = Popup(name, popUpType, self.canvas)
+        self.popUp = Popup(name, popUpType, self.canvas, self.model)
         self.popUp.setGeometry(geometry[0], geometry[1], geometry[2], geometry[3])
         self.popUp.show()
 
 class Popup(QWidget):
-    def __init__(self, name, popUpType, canvas_ref):
+    def __init__(self, name, popUpType, canvas_ref, model_ref):
         super().__init__()
 
         self.name = name
         self.vbox = None
         self.canvas = canvas_ref
+        self.model = model_ref
 
         self.initUI(popUpType)
 
@@ -67,6 +89,10 @@ class Popup(QWidget):
         if popUpType == GRID:
             self.setWindowIcon(QIcon(GRID_ICON))
             self.gridUI()
+        
+        elif popUpType == PVC:
+            self.setWindowIcon(QIcon(PVC_ICON))
+            self.pvcUI()
 
     def gridUI(self):
         r1 = QLabel("Qtd de pontos no eixo x(x > 1)")
@@ -103,6 +129,36 @@ class Popup(QWidget):
 
             print("Gerando Grid!!!")
             self.canvas.generateGrid(gridX, gridY)
+            self.close()
+            
+
+        b1.clicked.connect(callGridGenerator)
+
+    def pvcUI(self):
+        r1 = QLabel("Valor do PVC para os pontos selecionados")
+        t1 = QLineEdit()
+        
+        b1 = QPushButton("OK")
+
+        self.vbox.addWidget(r1)
+        self.vbox.addWidget(t1)
+
+        self.vbox.addWidget(b1)
+
+        self.setLayout(self.vbox)
+
+        # Connecting the signal
+        def callGridGenerator():
+            try:
+                pvc_value = float(t1.text())
+
+            except ValueError:
+                print("ERROR: Os campos devem ser preenchidos com um número")
+                return
+
+
+            print("PVC info gerada!!!")
+            self.model.set_pvc(pvc_value)
             self.close()
             
 

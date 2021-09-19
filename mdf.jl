@@ -7,6 +7,36 @@ function readJSON(_filename::String)
     return data
 end
 
+function gauss_seidel(_A::Array{Float64,2}, _b::Array{Float64}, x::Array{Float64}, _tol=0.0001, _nit=100)
+    m,n = size(_A)
+    if m != n
+        return nothing
+    end
+
+    elem_diag_p = _A[1,1]
+    for i=1:n
+        _A[i,i] = 0.0
+        _b[i,1] /= elem_diag_p
+        
+        for j=1:n
+            _A[i,j] /= elem_diag_p
+        end
+    end
+    
+    iter = 0
+    eps = typemax(Float64)
+    xold = 0.0
+    while (iter < _nit) && (eps > _tol)
+        eps = 0.0
+        for i=1:n
+            xold = x[i]
+            x[i] = _b[i] - (_A[i,:]'*x)
+            eps = max(abs((x[i]-xold)/x[i]), eps)
+        end
+        iter += 1
+    end
+end
+
 function calc_bloco(h, k) # h = espacamento horizontal, k = espacamento vertical
     aux = (h/k)^2
     return [2*(aux + 1), -1, -1, -aux, -aux]
@@ -92,7 +122,9 @@ function main(_filename::String)
         end
     end
 
-    x = A\b
+    #x = A\b
+    x = Array{Float64}(undef, n)
+    gauss_seidel(A, b, x)
 
     for pair in variables
         variables[pair[1]] = x[pair[2]] # resultado

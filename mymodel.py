@@ -154,14 +154,17 @@ class MyModel:
                         self.grid[point_id - 1] = points_count
                         break
         
-        print("GRID: ", self.grid)
+        #print("GRID: ", self.grid)
 
     def calculate_point_value(self, i, j):
 
         return [self.h*i + self.x_min, self.k*j + self.y_min]
     
     def calculate_point_id(self, i, j):
-        return j*self.nx + i + 1
+        pt_id = j*self.nx + i + 1
+        if pt_id > self.nx * self.ny: return 0
+        
+        return pt_id
 
     def check_point_connectivity(self, i, j):
         if self.grid is None:
@@ -239,7 +242,7 @@ class MyModel:
 
                 data["connect"].append(self.check_point_connectivity(i, j))
 
-        print(data["cc"])
+
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
 

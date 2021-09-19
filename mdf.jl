@@ -7,6 +7,11 @@ function readJSON(_filename::String)
     return data
 end
 
+function calc_bloco(h, k) # h = espacamento horizontal, k = espacamento vertical
+    aux = (h/k)^2
+    return [2*(aux + 1), -1, -1, -aux, -aux]
+end
+
 function main(_filename::String)
     println("MDF")
     data = readJSON(_filename)
@@ -53,7 +58,8 @@ function main(_filename::String)
         1   0
     ]
 =#    
-    bloco = [4 -1 -1 -1 -1]
+    #bloco = [4 -1 -1 -1 -1]
+    bloco = calc_bloco(data["h"], data["k"])
 
     n = length(connect)
 

@@ -129,7 +129,7 @@ class MyCanvas(QtOpenGL.QGLWidget):
                     p = self.m_model.calculate_point_value(i, j)
 
                     if self.m_model.grid[point_id - 1] == 0: continue # o ponto nao esta dentro do modelo
-
+                    #print(point_id, p)
                     # desenha o ponto
                     glBegin(GL_POINTS)
                     glVertex2f(p[0], p[1])
@@ -147,7 +147,7 @@ class MyCanvas(QtOpenGL.QGLWidget):
                     glBegin(GL_LINE_LOOP)
                     for angulo in range(0, 360, 2):
                         radiano = (angulo * pi) / 180
-                        glVertex2f(p[0] + self.m_model.h * cos(radiano), p[1] + self.m_model.k * sin(radiano))
+                        glVertex2f(p[0] + self.m_model.h/2 * cos(radiano), p[1] + self.m_model.k/2 * sin(radiano))
                     glEnd()
 
             #self.m_model.clear_grid_info()
@@ -294,39 +294,10 @@ class MyCanvas(QtOpenGL.QGLWidget):
         self.update()
 
 
-    def generateGrid(self, gridX, gridY):
-        #self.grid_points.clear()
-
+    def generateGrid(self, h, k):
         xmin, xmax, ymin, ymax = self.m_hmodel.getBoundBox()
 
-        self.m_model.set_grid_info(xmin, xmax, ymin, ymax, gridX, gridY, self.m_hmodel.patches)
-
-        '''
-        x_dist = xmax - xmin # distancia em x
-        y_dist = ymax - ymin # distancia em y
-
-        x_div = x_dist / float(gridX-1) # espacamento horizontal entre os pontos
-        y_div = y_dist / float(gridY-1) # espacamento vertical entre os pontos
-
-        self.x_div = x_div
-        self.y_div = y_div
-
-        for v in range(gridY):
-            for h in range(gridX):
-                p = [xmin + x_div * h, ymin + y_div * v]
-
-                for patch in self.m_hmodel.patches:
-                    if patch.isPointInside(Point(p[0], p[1])):
-                        self.grid_points.append({"x": p[0], "y": p[1]})
-                        break
-        
-        if len(self.grid_points) == 0:
-            print("Nenhum ponto do grid está dentro do domínio!!!")
-            return
-        fileName = f"grid_points{gridX}x{gridY}.json"
-        with open(fileName, "w") as f:
-            json.dump(self.grid_points, f, indent=2)
-        '''
+        self.m_model.set_grid_info(xmin, xmax, ymin, ymax, h, k, self.m_hmodel.patches)
 
         if not self.m_model.has_point_inside_model():
             print("Nenhum ponto do grid está dentro do domínio!!!")
@@ -334,3 +305,9 @@ class MyCanvas(QtOpenGL.QGLWidget):
 
         self.update()
         self.repaint()
+    
+    def clear_hmodel(self):
+        self.m_hmodel.clearAll()
+
+        self.update()
+        self.repaint()        

@@ -49,6 +49,45 @@ class MyModel:
         self.grid = None
         self.selected_points = None
 
+    def set_grid_info(self, x_min, x_max, y_min, y_max, h, k, patches=None):
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+
+        #self.nx = nx
+        #self.ny = ny
+
+        #x_dist = self.x_max - self.x_min # distancia em x
+        #y_dist = self.y_max - self.y_min # distancia em y
+
+        #self.h = x_dist / float(self.nx-1) # espacamento horizontal entre os pontos
+        #self.k = y_dist / float(self.ny-1) # espacamento vertical entre os pontos
+
+        self.h = h
+        self.k = k
+
+        #self.grid = [0 for x in range(self.nx*self.ny)]
+        self.nx = 0
+        self.ny = 0
+        point_x = self.x_min
+        while point_x <= self.x_max:
+            self.nx += 1
+            point_x += h
+
+        point_y = self.y_min
+        while point_y <= self.y_max:
+            self.ny += 1
+            point_y += k
+        
+        self.grid = [0 for x in range(self.nx*self.ny)]
+
+        print(self.grid)
+        print(self.nx, self.ny)
+        self.selected_points = {}
+
+        if patches is not None: self.mark_points_inside_patches(patches)
+    '''
     def set_grid_info(self, x_min, x_max, y_min, y_max, nx, ny, patches=None):
         self.x_min = x_min
         self.x_max = x_max
@@ -68,7 +107,7 @@ class MyModel:
         self.selected_points = {}
 
         if patches is not None: self.mark_points_inside_patches(patches)
-    
+    '''    
     def clear_model(self):
         self.x_min = None
         self.x_max = None
@@ -104,8 +143,13 @@ class MyModel:
                 #if self.grid[point_id - 1] != 0: continue
 
                 p = self.calculate_point_value(i, j)
+                p1 = MyPoint(p[0]+self.h/2, p[1])
+                p2 = MyPoint(p[0]-self.h/2, p[1])
+                p3 = MyPoint(p[0], p[1]+self.k/2)
+                p4 = MyPoint(p[0], p[1]-self.k/2)
                 for patch in patches:
-                    if patch.isPointInside(MyPoint(p[0], p[1])):
+                    if patch.isPointInside(p1) and patch.isPointInside(p2) and patch.isPointInside(p3) and patch.isPointInside(p4):
+                    #if patch.isPointInside(MyPoint(p[0], p[1])):
                         points_count += 1
                         self.grid[point_id - 1] = points_count
                         break
@@ -113,6 +157,7 @@ class MyModel:
         print("GRID: ", self.grid)
 
     def calculate_point_value(self, i, j):
+
         return [self.h*i + self.x_min, self.k*j + self.y_min]
     
     def calculate_point_id(self, i, j):
@@ -128,7 +173,8 @@ class MyModel:
         left_id = self.calculate_point_id(i-1, j)
         right_id = self.calculate_point_id(i+1, j)
 
-        return [self.grid[right_id-1], self.grid[left_id-1], self.grid[bottom_id-1], self.grid[top_id-1]]
+        res = [self.grid[right_id-1], self.grid[left_id-1], self.grid[bottom_id-1], self.grid[top_id-1]]
+        return res
     
     def check_selected_points(self, pt0_U, pt1_U):
         x_min = min(pt0_U.x(), pt1_U.x())

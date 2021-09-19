@@ -63,10 +63,10 @@ class MyWindow(QMainWindow):
 
         elif a.text() == "save model":
             self.buildPopup("Filename", SAVE)
-            #self.model.save_model()
 
         elif a.text() == "clear model":
             self.model.clear_model()
+            self.canvas.clear_hmodel()
 
 
     def buildPopup(self, name, popUpType, geometry = [200, 200, 300, 100]):
@@ -102,10 +102,12 @@ class Popup(QWidget):
             self.saveUI()
 
     def gridUI(self):
-        r1 = QLabel("Qtd de pontos no eixo x(x > 1)")
+        #r1 = QLabel("Qtd de pontos no eixo x(x > 1)")
+        r1 = QLabel("Digite o espaçamento horizontal")
         t1 = QLineEdit()
         
-        r2 = QLabel("Qtd de pontos no eixo y(y > 1)")
+        #r2 = QLabel("Qtd de pontos no eixo y(y > 1)")
+        r2 = QLabel("Digite o espaçamento vertical")
         t2 = QLineEdit()
 
         b1 = QPushButton("Gerar Grid")
@@ -123,19 +125,15 @@ class Popup(QWidget):
         # Connecting the signal
         def callGridGenerator():
             try:
-                gridX = int(t1.text())
-                gridY = int(t2.text())
+                h = float(t1.text())
+                k = float(t2.text())
 
             except ValueError:
-                print("ERROR: Os campos devem ser preenchidos com um número inteiro.")
-                return
-
-            if gridX <= 1 or gridY <= 1:
-                print("ERROR: Os valores devem ser maiores que 1.")
+                print("ERROR: Os campos devem ser preenchidos com um número.")
                 return
 
             print("Gerando Grid...")
-            self.canvas.generateGrid(gridX, gridY)
+            self.canvas.generateGrid(h, k)
             self.close()
             
 

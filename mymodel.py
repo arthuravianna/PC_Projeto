@@ -136,8 +136,8 @@ class MyModel:
         x_max = max(pt0_U.x(), pt1_U.x())
         y_max = max(pt0_U.y(), pt1_U.y())
 
-        for i in range(self.nx):
-            for j in range(self.ny):
+        for j in range(self.ny):
+            for i in range(self.nx):
                 point_id = self.calculate_point_id(i, j)
 
                 if self.grid[point_id - 1] == 0: continue # ponto fora do modelo
@@ -162,6 +162,8 @@ class MyModel:
         for k,v in self.selected_points.items():
             if v is None: self.selected_points[k] = value
 
+        print("SET SELECTED POINTS: ", self.selected_points)
+
     def save_model(self, filename):
         data = {}
         data["h"] = self.h
@@ -171,26 +173,27 @@ class MyModel:
         data["ny"] = self.ny
 
         data["cc"] = []
-        data["conect"] = []
+        data["connect"] = []
 
-        for i in range(self.nx):
-            for j in range(self.ny):
+        for j in range(self.ny):
+            for i in range(self.nx):
                 point_id = self.calculate_point_id(i, j)
 
                 if self.grid[point_id - 1] == 0: continue # ponto fora do modelo
 
-                value = 0
-                if str(point_id) in self.selected_points: value = self.selected_points[str(point_id)]
+                if str(point_id) in self.selected_points:
+                    value = self.selected_points[str(point_id)]
+                    if value is None:
+                        print("ERRO MyModel: Defina o valor da Condicao de Contorno!!!")
+                        return
 
-                if value is None:
-                    print("ERRO MyModel: Defina o valor da Condicao de Contorno!!!")
-                    return
-                
-                if value == 0: data["cc"].append((0, 0))
-                else: data["cc"].append((1, value))
+                    data["cc"].append((1, value))
+                else:
+                    data["cc"].append((0, 0))
 
-                data["conect"].append(self.check_point_connectivity(i, j))
-                   
+                data["connect"].append(self.check_point_connectivity(i, j))
+
+        print(data["cc"])
         with open(filename, "w") as f:
             json.dump(data, f, indent=2)
 

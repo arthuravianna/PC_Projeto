@@ -13,6 +13,7 @@ function main(_filename::String)
 
     connect = data["connect"]
     cc = data["cc"]
+
     #=
     connect = [
         2   0   0   5;
@@ -33,7 +34,7 @@ function main(_filename::String)
         0   15  12  0
     ]
 
-    cc = [
+    cc1 = [
         1   100;
         1   75;
         1   75;
@@ -51,15 +52,15 @@ function main(_filename::String)
         1   25;
         1   0
     ]
-    =#
+=#    
     bloco = [4 -1 -1 -1 -1]
 
-    n,temp = size(connect)
+    n = length(connect)
 
     # assembly
-    variables = Dict()
+    variables = Dict{Int, Any}()
     for i=1:n
-        if cc[i,1] == 0
+        if cc[i][1] == 0
             variables[i] = length(variables) + 1
         end
     end
@@ -74,24 +75,26 @@ function main(_filename::String)
         A[new_i,new_i] = bloco[1] #N0
 
         for x=1:4
-            conn = connect[old_i,x]
+            conn = connect[old_i][x]
             if conn != 0 # existe conexao
-                if cc[conn,1] == 1 # ponto com valor conhecido
-                    b[new_i] -= bloco[x+1] * cc[conn,2]
+                if cc[conn][1] == 1 # ponto com valor conhecido
+                    b[new_i] -= bloco[x+1] * cc[conn][2]
                 else
                     A[new_i,variables[conn]] = bloco[x+1]
                 end
             end
         end
-
     end
 
     x = A\b
 
     for pair in variables
-        variables[pair[1]] = x[pair[2]]
+        variables[pair[1]] = x[pair[2]] # resultado
     end
-    display(variables)
+
+    fout = open(string("result_", _filename), "w")
+    JSON.print(fout, sort(collect(variables)), 2)
+    close(fout)
 end
 
 if length(ARGS) == 1

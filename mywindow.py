@@ -134,7 +134,7 @@ class Popup(QWidget):
                 print("ERROR: Os valores devem ser maiores que 1.")
                 return
 
-            print("Gerando Grid!!!")
+            print("Gerando Grid...")
             self.canvas.generateGrid(gridX, gridY)
             self.close()
             
@@ -190,7 +190,7 @@ class Popup(QWidget):
             filename = t1.text()
             if len(filename) == 0: print("ERRO: Eh necessario dar um nome ao arquivo.")
 
-            print("Salvando Modelo!!!")
+            print("Salvando Modelo...")
             self.model.save_model(filename)
             self.close()
             

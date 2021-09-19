@@ -162,7 +162,7 @@ class MyModel:
         for k,v in self.selected_points.items():
             if v is None: self.selected_points[k] = value
 
-    def save_model(self):
+    def save_model(self, filename):
         data = {}
         data["h"] = self.h
         data["k"] = self.k
@@ -191,7 +191,7 @@ class MyModel:
 
                 data["conect"].append(self.check_point_connectivity(i, j))
                    
-        with open(f"mdf_input_grid_{self.nx}x{self.ny}.json", "w") as f:
+        with open(filename, "w") as f:
             json.dump(data, f, indent=2)
 
 

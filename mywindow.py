@@ -6,8 +6,10 @@ from mymodel import *
 # Globals
 GRID = 0
 PVC = 1
+SAVE = 2
 GRID_ICON = "icons/grid.png"
 PVC_ICON = "icons/pvc.png"
+SAVE_ICON = "icons/save.png"
 
 class MyWindow(QMainWindow):
 
@@ -60,7 +62,8 @@ class MyWindow(QMainWindow):
             self.buildPopup("PVC Value", PVC)
 
         elif a.text() == "save model":
-            self.model.save_model()
+            self.buildPopup("Filename", SAVE)
+            #self.model.save_model()
 
         elif a.text() == "clear model":
             self.model.clear_model()
@@ -94,6 +97,10 @@ class Popup(QWidget):
             self.setWindowIcon(QIcon(PVC_ICON))
             self.pvcUI()
 
+        elif popUpType == SAVE:
+            self.setWindowIcon(QIcon(SAVE_ICON))
+            self.saveUI()
+
     def gridUI(self):
         r1 = QLabel("Qtd de pontos no eixo x(x > 1)")
         t1 = QLineEdit()
@@ -120,11 +127,11 @@ class Popup(QWidget):
                 gridY = int(t2.text())
 
             except ValueError:
-                print("ERROR: Os campos devem ser preenchidos com um número inteiro")
+                print("ERROR: Os campos devem ser preenchidos com um número inteiro.")
                 return
 
             if gridX <= 1 or gridY <= 1:
-                print("ERROR: Os valores devem ser maiores que 1")
+                print("ERROR: Os valores devem ser maiores que 1.")
                 return
 
             print("Gerando Grid!!!")
@@ -148,12 +155,12 @@ class Popup(QWidget):
         self.setLayout(self.vbox)
 
         # Connecting the signal
-        def callGridGenerator():
+        def callSetPVC():
             try:
                 pvc_value = float(t1.text())
 
             except ValueError:
-                print("ERROR: Os campos devem ser preenchidos com um número")
+                print("ERROR: O campo deve ser preenchido com um número.")
                 return
 
 
@@ -162,4 +169,30 @@ class Popup(QWidget):
             self.close()
             
 
-        b1.clicked.connect(callGridGenerator)
+        b1.clicked.connect(callSetPVC)
+    
+
+    def saveUI(self):
+        r1 = QLabel("Digite o nome do arquivo(Use a extensão \".json\")")
+        t1 = QLineEdit()
+        
+        b1 = QPushButton("Save")
+
+        self.vbox.addWidget(r1)
+        self.vbox.addWidget(t1)
+
+        self.vbox.addWidget(b1)
+
+        self.setLayout(self.vbox)
+
+        # Connecting the signal
+        def callSaveModel():
+            filename = t1.text()
+            if len(filename) == 0: print("ERRO: Eh necessario dar um nome ao arquivo.")
+
+            print("Salvando Modelo!!!")
+            self.model.save_model(filename)
+            self.close()
+            
+
+        b1.clicked.connect(callSaveModel)
